@@ -310,12 +310,13 @@ class Bot(commands.Bot):
             if lang_detect in Ignore_Lang:
                 return
 
-        if config.Main_Language == lang_detect and config.Translate_Me:
-            if msg.channel._name != config.Twitch_Channel:
+        if config.Main_Language == lang_detect:
+            if config.Translate_Me:
+                if msg.channel._name != config.Twitch_Channel:
+                    return
+            else:
                 return
-        else:
-            return        
-
+        
         if config.Debug: print(f"lang_dest:{lang_dest} in_text:{in_text}")
 
         # 音声合成（入力文） --------------
