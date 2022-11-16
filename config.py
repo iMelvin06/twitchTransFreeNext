@@ -10,21 +10,24 @@ Trans_OAUTH             = 'oauth_for_trans_user'
 Trans_TextColor         = 'GoldenRod'
 # Blue, Coral, DodgerBlue, SpringGreen, YellowGreen, Green, OrangeRed, Red, GoldenRod, HotPink, CadetBlue, SeaGreen, Chocolate, BlueViolet, and Firebrick
 
-lang_TransToHome        = 'ja'
-lang_HomeToOther        = 'en'
+Main_Language           = 'en'
+Translate_Me            = True
+lang_TransToHome        = 'en'
+lang_HomeToOther        = 'es'
 
 Show_ByName             = True
 Show_ByLang             = True
 
-Ignore_Lang             = ['']
-Ignore_Users            = ['Nightbot', 'BikuBikuTest']
-Ignore_Line             = ['http', 'BikuBikuTest', '888', '８８８']
+Ignore_Lang             = ['haw','sq','am','ar','hy','az','eu','be','bn','bs','bg','ca','ceb','ny','zh-CN','cs','da','nl','eo','et','tl','fi','fr','fy','gl','ka','de ','el','iw','hi','hmn','hu','is','ig','id','ga','it','ja','jw','kn','kk','km','la','lv','lt','lb','mk','mg','ms','ml','mt','mi','mr','mn','my','ne','pt','ma','ro','ru','sm','gd','sr','st','sn','sd','si','sk','sl','so','tg','ta','te','th','tr','uk','ur','uz','vi','cy','xh','yi','yo','zu']
+#Ignore_Lang             = ['']
+Ignore_Users            = ['Nightbot', 'BikuBikuTest', 'StreamElements']
+Ignore_Line             = ['http', 'BikuBikuTest', '888', '８８８', 'https']
 Delete_Words            = ['saatanNooBow', 'BikuBikuTest']
 
 # Any emvironment, set it to `True`, then text will be read by TTS voice!
 # TTS_In:User Input Text, TTS_Out:Bot Output Text
-TTS_In                  = True
-TTS_Out                 = True
+TTS_In                  = False
+TTS_Out                 = False
 TTS_Kind                = "gTTS" # You can choice "CeVIO" if you want to use CeVIO as TTS.
 # CeVIO_Cast            = "さとうささら" # When you are using CeVIO, you must set voice cast name.
 
@@ -45,4 +48,4 @@ GAS_URL                 = ''
 GoogleTranslate_suffix  = 'co.jp'
 
 # If you meet any bugs, You can check some error message using Debug mode (Debug = True)
-Debug                   = False
+Debug                   = True
