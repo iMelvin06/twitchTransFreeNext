@@ -312,7 +312,7 @@ class Bot(commands.Bot):
 
         if config.Main_Language == lang_detect:
             if config.Translate_Me:
-                if msg.channel._name != config.Twitch_Channel:
+                if msg.author.name != config.Twitch_Channel:
                     return
             else:
                 return
