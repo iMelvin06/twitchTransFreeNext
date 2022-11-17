@@ -21,6 +21,8 @@ from twitchio.ext import commands
 import sys
 import signal
 
+import requests
+
 version = '2.5.1'
 '''
 v2.5.1  : - bug fix for TTS(さとうささら) by yuniruyuni
@@ -75,6 +77,7 @@ TargetLangs = ["es","en"]
 
 deepl_lang_dict = {'de':'DE', 'en':'EN', 'fr':'FR', 'es':'ES', 'pt':'PT', 'it':'IT', 'nl':'NL', 'pl':'PL', 'ru':'RU', 'ja':'JA', 'zh-CN':'ZH'}
 
+SevenTv_Emotes = []
 
 ##########################################
 # load config text #######################
@@ -157,8 +160,6 @@ async def GAS_Trans(session, text, lang_source, lang_target):
             if config.Debug: print("[GAS_Trans] post failed...")
         return False
 
-
-
 ##########################################
 # メイン動作 ##############################
 ##########################################
@@ -171,6 +172,37 @@ class Bot(commands.Bot):
             prefix              = "!",
             initial_channels    = [config.Twitch_Channel]
         )
+
+
+    async def event_ready(self):
+        # We are logged in and ready to chat and use commands...
+        ###### fetching emotes from 3rd party platforms #####
+        try:
+            print(f"user id: {self.user_id}")
+            userID = self.user_id
+            userID = '549757912'
+            tmpEmotes = []
+            response = requests.get(f"https://7tv.io/v3/users/twitch/{userID}")
+            if (response.status_code == 200):
+                if 'emote_set' in response.json():
+                    if config.Debug: print('7tv emotes downloaded')
+                    for SevenEmote in response.json()['emote_set']['emotes']:
+                        SevenTv_Emotes.append(SevenEmote['name'])
+
+                    #SevenTv_Emotes = tmpEmotes
+                    # Code here will only run if the request is successful
+                else:
+                    if config.Debug: print('7tv emotes not set')
+            else:
+                print("Couldnt fetch 7tv emotes")
+            print(response)
+
+        except Exception as e:
+            print('Error trying to fecth 7tv emotes')
+            if config.Debug: print(e.args)
+
+        print(f'Logged in as | {self.nick}')
+        print(f'User id is | {self.user_id}')
 
     # 起動時 ####################
     async def event_channel_joined(self, channel):
@@ -261,6 +293,11 @@ class Bot(commands.Bot):
         # 複数空文字を一つにまとめる --------
         message = " ".join( message.split() )
 
+        ### call remove 3rd party emotes functions ###
+        ##message = RemoveSevenTvEmotes(message)
+        emotesRemoved = []
+        message = RemoveSevenTvEmotes(message, emotesRemoved)
+        
         if not message:
             return
 
@@ -383,6 +420,12 @@ class Bot(commands.Bot):
         # チャットへの投稿 ----------------
         # 投稿内容整形 & 投稿
         out_text = translatedText
+
+        ### add 3rd parties Emotes ###
+        for emoteRemoved in emotesRemoved:
+            out_text += ' {}'.format(emoteRemoved['name'])
+            
+
         if config.Show_ByName:
             out_text = '{} [by {}]'.format(out_text, user)
         if config.Show_ByLang:
@@ -536,6 +579,16 @@ def sound_play():
             except Exception as e:
                 print('sound error: [!sound] command can not play sound...')
                 if config.Debug: print(e.args)
+
+### 7tv emotes checker ###
+def RemoveSevenTvEmotes(message, emotesRemoved):
+    tmpArray = message.split()
+    for word in tmpArray:
+        if word in SevenTv_Emotes:
+            emotesRemoved.append({'index': message.index(word) , 'name': word})
+            message = message.replace(word, '')
+    
+    return message
 
 # メイン処理 ###########################
 def main():
