@@ -180,8 +180,6 @@ class Bot(commands.Bot):
         try:
             print(f"user id: {self.user_id}")
             userID = self.user_id
-            userID = '549757912'
-            tmpEmotes = []
             response = requests.get(f"https://7tv.io/v3/users/twitch/{userID}")
             if (response.status_code == 200):
                 if 'emote_set' in response.json():
