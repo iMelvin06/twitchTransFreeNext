@@ -470,6 +470,15 @@ class Bot(commands.Bot):
     async def ver(self, ctx):
         await ctx.send('this is tTFN. ver: ' + version)
 
+    ### Translation OnDemand
+    @commands.command(name='es')
+    async def esTrans(self, ctx):
+        await TransOnDemand(ctx,'es')
+
+    @commands.command(name='en')
+    async def enTrans(self, ctx):
+        await TransOnDemand(ctx,'en')
+
     # @commands.command(name='sound')
     # async def sound(ctx):
     #     sound_name = ctx.content.strip().split(" ")[1]
@@ -600,6 +609,188 @@ def sound_play():
             except Exception as e:
                 print('sound error: [!sound] command can not play sound...')
                 if config.Debug: print(e.args)
+
+### Translate OnDemand ####
+async def TransOnDemand(ctx,target_lang):
+    msg = ctx.message
+    message = msg.content
+    message = message[3:]
+    user    = msg.author.name.lower()
+
+    for w in Ignore_Line:
+        if w in message:
+            return
+
+    emote_list = []
+    if msg.tags:
+        if msg.tags['emotes']:
+            emotes_s = msg.tags['emotes'].split('/')
+            for emo in emotes_s:
+                if config.Debug: print()
+                if config.Debug: print(emo)
+                e_id, e_pos = emo.split(':')
+
+                if config.Debug: print(f'e_pos:{e_pos}')
+                if ',' in e_pos:
+                    ed_pos = e_pos.split(',')
+                    for e in ed_pos:
+                        if config.Debug: print(f'{e}')
+                        if config.Debug: print(e.split('-'))
+                        e_s, e_e = e.split('-')
+                        if config.Debug: print(msg.content[int(e_s):int(e_e)+1])
+
+                        emote_list.append(msg.content[int(e_s):int(e_e)+1])
+
+                else:
+                    e = e_pos
+                    e_s, e_e = e.split('-')
+                    if config.Debug: print(msg.content[int(e_s):int(e_e)+1])
+
+                    emote_list.append(msg.content[int(e_s):int(e_e)+1])
+
+            if config.Debug: print(f'message with emote:{message}')
+            for w in sorted(emote_list, key=len, reverse=True):
+                if config.Debug: print(w)
+                message = message.replace(w, '')
+
+            if config.Debug: print(f'message without emote:{message}')
+
+    for w in Delete_Words:
+        message = message.replace(w, '')
+
+    message = re.sub(r'@\S+', '', message)
+
+    message = " ".join( message.split() )
+
+    ### call remove 3rd party emotes functions ###
+    ##message = RemoveSevenTvEmotes(message)
+    emotesRemoved = []
+    message = RemoveSevenTvEmotes(message, emotesRemoved)
+    
+    if not message:
+        return
+
+    in_text = message
+    print(in_text)
+
+    if config.Debug: print(f'--- Detect Language ---')
+    lang_detect = ''
+
+    if not config.GAS_URL or config.Translator == 'deepl':
+        try:
+            detected = await translator.detect(in_text)
+            lang_detect = detected[0]
+        except Exception as e:
+            if config.Debug: print(e)
+
+    # use GAS ---
+    else:
+        try:
+            trans_text = await GAS_Trans(self._http.session, in_text, '', config.lang_TransToHome)
+            if trans_text == in_text:
+                lang_detect = config.lang_TransToHome
+            else:
+                lang_detect = 'GAS'
+        except Exception as e:
+            if config.Debug: print(e)
+
+    if config.Debug: print(f'lang_detect:{lang_detect}')
+
+    # if config.Debug: print(f'--- Select Destinate Language ---')
+    # lang_dest = config.lang_TransToHome if lang_detect != config.lang_TransToHome else config.lang_HomeToOther
+    # if config.Debug: print(f"lang_detect:{lang_detect} lang_dest:{lang_dest}")
+    lang_dest = target_lang
+
+    m = in_text.split(':')
+    if len(m) >= 2:
+        if m[0] in TargetLangs:
+            lang_dest = m[0]
+            in_text = ':'.join(m[1:])
+    else:
+        ''
+        # if lang_detect in Ignore_Lang:
+        #     return
+    
+    if config.Debug: print(f"lang_dest:{lang_dest} in_text:{in_text}")
+
+    # 音声合成（入力文） --------------
+    # if len(in_text) > int(config.TooLong_Cut):
+    #     in_text = in_text[0:int(config.TooLong_Cut)]
+    if config.TTS_In: synth_queue.put([in_text, lang_detect])
+
+    # 検出言語と翻訳先言語が同じだったら無視！
+    if lang_detect == lang_dest:
+        return
+
+    ################################
+    # 翻訳 --------------------------
+    if config.Debug: print(f'--- Translation ---')
+    translatedText = ''
+
+    # use deepl --------------
+    # (try to use deepl, but if the language is not supported, text will be translated by google!)
+    if config.Translator == 'deepl':
+        try:
+            if lang_detect in deepl_lang_dict.keys() and lang_dest in deepl_lang_dict.keys():
+                translatedText = (
+                    await asyncio.gather(asyncio.to_thread(deepl.translate, source_language= deepl_lang_dict[lang_detect], target_language=deepl_lang_dict[lang_dest], text=in_text))
+                    )[0]
+                if config.Debug: print(f'[DeepL Tlanslate]({deepl_lang_dict[lang_detect]} > {deepl_lang_dict[lang_dest]})')
+            else:
+                if not config.GAS_URL:
+                    try:
+                        translatedText = await translator.translate(in_text, lang_dest)
+                        if config.Debug: print('[Google Tlanslate (google_trans_new)]')
+                    except Exception as e:
+                        if config.Debug: print(e)
+                else:
+                    try:
+                        translatedText = await GAS_Trans(self._http.session, in_text, '', lang_dest)
+                        if config.Debug: print('[Google Tlanslate (Google Apps Script)]')
+                    except Exception as e:
+                        if config.Debug: print(e)
+        except Exception as e:
+            if config.Debug: print(e)
+
+    # NOT use deepl ----------
+    elif config.Translator == 'google':
+        # use google_trans_new ---
+        if not config.GAS_URL:
+            try:
+                translatedText = await translator.translate(in_text, lang_dest)
+                if config.Debug: print('[Google Tlanslate (google_trans_new)]')
+            except Exception as e:
+                if config.Debug: print(e)
+
+        # use GAS ---
+        else:
+            try:
+                translatedText = await GAS_Trans(self._http.session, in_text, '', lang_dest)
+                if config.Debug: print('[Google Tlanslate (Google Apps Script)]')
+            except Exception as e:
+                if config.Debug: print(e)
+
+    else:
+        print(f'ERROR: config TRANSLATOR is set the wrong value with [{config.Translator}]')
+        return
+
+    out_text = translatedText
+
+    ### add 3rd parties Emotes ###
+    for emoteRemoved in emotesRemoved:
+        out_text += ' {}'.format(emoteRemoved['name'])
+        
+
+    if config.Show_ByName:
+        out_text = '{} [by {}]'.format(out_text, user)
+    if config.Show_ByLang:
+        out_text = '{} ({} > {})'.format(out_text, lang_detect, lang_dest)
+
+    print(out_text)
+
+    if msg.channel.send:
+        await msg.channel.send("/me " + out_text)
+        out_text = None
 
 ### 7tv emotes checker ###
 def RemoveSevenTvEmotes(message, emotesRemoved):
