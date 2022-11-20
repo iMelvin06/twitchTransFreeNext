@@ -18,7 +18,7 @@ lang_HomeToOther        = 'es'
 Show_ByName             = True
 Show_ByLang             = True
 
-Ignore_Lang             = ['sw ','gu','ht','haw','sq','am','ar','hy','az','eu','be','bn','bs','bg','ca','ceb','ny','zh-CN','cs','da','nl','eo','et','tl','fi','fr','fy','gl','ka','de ','el','iw','hi','hmn','hu','is','ig','id','ga','it','ja','jw','kn','kk','km','la','lv','lt','lb','mk','mg','ms','ml','mt','mi','mr','mn','my','ne','pt','ma','ro','ru','sm','gd','sr','st','sn','sd','si','sk','sl','so','tg','ta','te','th','tr','uk','ur','uz','vi','cy','xh','yi','yo','zu']
+Ignore_Lang             = ['pl','sv','su','sw ','gu','ht','haw','sq','am','ar','hy','az','eu','be','bn','bs','bg','ca','ceb','ny','zh-CN','cs','da','nl','eo','et','tl','fi','fr','fy','gl','ka','de ','el','iw','hi','hmn','hu','is','ig','id','ga','it','ja','jw','kn','kk','km','la','lv','lt','lb','mk','mg','ms','ml','mt','mi','mr','mn','my','ne','pt','ma','ro','ru','sm','gd','sr','st','sn','sd','si','sk','sl','so','tg','ta','te','th','tr','uk','ur','uz','vi','cy','xh','yi','yo','zu']
 #Ignore_Lang             = ['']
 Ignore_Users            = ['Nightbot', 'BikuBikuTest', 'StreamElements']
 Ignore_Line             = ['http', 'BikuBikuTest', '888', '８８８', 'https']
