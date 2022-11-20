@@ -432,7 +432,9 @@ class Bot(commands.Bot):
         # コンソールへの表示 --------------
         print(out_text)
 
-        await msg.channel.send("/me " + out_text)
+        if msg.channel.send:
+            await msg.channel.send("/me " + out_text)
+            out_text = None
 
 
         # 音声合成（出力文） --------------
