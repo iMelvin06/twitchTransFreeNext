@@ -178,13 +178,26 @@ class Bot(commands.Bot):
         # We are logged in and ready to chat and use commands...
         ###### fetching emotes from 3rd party platforms #####
         try:
-            print(f"user id: {self.user_id}")
+            ### 7tv Channel Emotes ###
+            if config.Debug: print(f"user id: {self.user_id}")
             userID = self.user_id
             response = requests.get(f"https://7tv.io/v3/users/twitch/{userID}")
             if (response.status_code == 200):
                 if 'emote_set' in response.json():
-                    if config.Debug: print('7tv emotes downloaded')
+                    if config.Debug: print('Channel 7tv emotes downloaded')
                     for SevenEmote in response.json()['emote_set']['emotes']:
+                        SevenTv_Emotes.append(SevenEmote['name'])
+                else:
+                    if config.Debug: print('7tv emotes not set')
+            else:
+                print("Couldnt fetch channel 7tv emotes")
+            
+            ### 7tv Global Emotes ###
+            response = requests.get(f"https://7tv.io/v3/emote-sets/global")
+            if (response.status_code == 200):
+                if 'emotes' in response.json():
+                    if config.Debug: print('Global 7tv emotes downloaded')
+                    for SevenEmote in response.json()['emotes']:
                         SevenTv_Emotes.append(SevenEmote['name'])
 
                     #SevenTv_Emotes = tmpEmotes
@@ -192,8 +205,7 @@ class Bot(commands.Bot):
                 else:
                     if config.Debug: print('7tv emotes not set')
             else:
-                print("Couldnt fetch 7tv emotes")
-            print(response)
+                print("Couldnt fetch global 7tv emotes")
 
         except Exception as e:
             print('Error trying to fecth 7tv emotes')
