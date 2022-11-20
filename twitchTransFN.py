@@ -77,7 +77,10 @@ TargetLangs = ["es","en"]
 
 deepl_lang_dict = {'de':'DE', 'en':'EN', 'fr':'FR', 'es':'ES', 'pt':'PT', 'it':'IT', 'nl':'NL', 'pl':'PL', 'ru':'RU', 'ja':'JA', 'zh-CN':'ZH'}
 
+### array of 7tv emotes
 SevenTv_Emotes = []
+### Variable for check if it is a cheer
+IsCheer = False
 
 ##########################################
 # load config text #######################
@@ -303,6 +306,12 @@ class Bot(commands.Bot):
         # 複数空文字を一つにまとめる --------
         message = " ".join( message.split() )
 
+        ### removing cheers from translation ###
+        cheersPattern = r'^(cheer[\d]+)'
+        if re.search(cheersPattern,message):
+            IsCheer = True
+            message = re.sub(cheersPattern,'',message)
+
         ### call remove 3rd party emotes functions ###
         ##message = RemoveSevenTvEmotes(message)
         emotesRemoved = []
@@ -461,41 +470,41 @@ class Bot(commands.Bot):
     async def ver(self, ctx):
         await ctx.send('this is tTFN. ver: ' + version)
 
-    @commands.command(name='sound')
-    async def sound(ctx):
-        sound_name = ctx.content.strip().split(" ")[1]
-        sound_queue.put(sound_name)
+    # @commands.command(name='sound')
+    # async def sound(ctx):
+    #     sound_name = ctx.content.strip().split(" ")[1]
+    #     sound_queue.put(sound_name)
 
-    @commands.command(name='timer')
-    async def timer(ctx):
-        timer_min = 0
-        timer_name = ''
+    # @commands.command(name='timer')
+    # async def timer(ctx):
+    #     timer_min = 0
+    #     timer_name = ''
 
-        d = ctx.content.strip().split(" ")
-        if len(d) == 2:
-            try:
-                timer_min = int(d[1])
-            except Exception as e:
-                    print('timer error: !timer [min] [name]')
-                    if config.Debug: print(e.args)
-                    return 0
+    #     d = ctx.content.strip().split(" ")
+    #     if len(d) == 2:
+    #         try:
+    #             timer_min = int(d[1])
+    #         except Exception as e:
+    #                 print('timer error: !timer [min] [name]')
+    #                 if config.Debug: print(e.args)
+    #                 return 0
 
-        elif len(d) == 3:
-            try:
-                timer_min = int(d[1])
-                timer_name = d[2]
-            except Exception as e:
-                    print('timer error: !timer [min] [name]')
-                    if config.Debug: print(e.args)
-                    return 0
+    #     elif len(d) == 3:
+    #         try:
+    #             timer_min = int(d[1])
+    #             timer_name = d[2]
+    #         except Exception as e:
+    #                 print('timer error: !timer [min] [name]')
+    #                 if config.Debug: print(e.args)
+    #                 return 0
 
-        else:
-            print(f'command error [{ctx.content}]')
-            return 0
+    #     else:
+    #         print(f'command error [{ctx.content}]')
+    #         return 0
 
-        await ctx.send(f'#### timer [{timer_name}] ({timer_min} min.) start! ####')
-        await asyncio.sleep(timer_min*60)
-        await ctx.send(f'#### timer [{timer_name}] ({timer_min} min.) end! ####')
+    #     await ctx.send(f'#### timer [{timer_name}] ({timer_min} min.) start! ####')
+    #     await asyncio.sleep(timer_min*60)
+    #     await ctx.send(f'#### timer [{timer_name}] ({timer_min} min.) end! ####')
 
 # CeVIOを呼び出すための関数を生成する関数
 # つまり cast 引数を与えることで、この関数から
