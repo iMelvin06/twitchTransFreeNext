@@ -77,6 +77,8 @@ TargetLangs = ["es","en"]
 
 deepl_lang_dict = {'de':'DE', 'en':'EN', 'fr':'FR', 'es':'ES', 'pt':'PT', 'it':'IT', 'nl':'NL', 'pl':'PL', 'ru':'RU', 'ja':'JA', 'zh-CN':'ZH'}
 
+userIdGlobal = ''
+
 ### array of 7tv emotes
 SevenTv_Emotes = []
 ### Variable for check if it is a cheer
@@ -179,40 +181,8 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         # We are logged in and ready to chat and use commands...
-        ###### fetching emotes from 3rd party platforms #####
-        try:
-            ### 7tv Channel Emotes ###
-            if config.Debug: print(f"user id: {self.user_id}")
-            userID = self.user_id
-            response = requests.get(f"https://7tv.io/v3/users/twitch/{userID}")
-            if (response.status_code == 200):
-                if 'emote_set' in response.json():
-                    if config.Debug: print('Channel 7tv emotes downloaded')
-                    for SevenEmote in response.json()['emote_set']['emotes']:
-                        SevenTv_Emotes.append(SevenEmote['name'])
-                else:
-                    if config.Debug: print('7tv emotes not set')
-            else:
-                print("Couldnt fetch channel 7tv emotes")
-            
-            ### 7tv Global Emotes ###
-            response = requests.get(f"https://7tv.io/v3/emote-sets/global")
-            if (response.status_code == 200):
-                if 'emotes' in response.json():
-                    if config.Debug: print('Global 7tv emotes downloaded')
-                    for SevenEmote in response.json()['emotes']:
-                        SevenTv_Emotes.append(SevenEmote['name'])
-
-                    #SevenTv_Emotes = tmpEmotes
-                    # Code here will only run if the request is successful
-                else:
-                    if config.Debug: print('7tv emotes not set')
-            else:
-                print("Couldnt fetch global 7tv emotes")
-
-        except Exception as e:
-            print('Error trying to fecth 7tv emotes')
-            if config.Debug: print(e.args)
+        userIdGlobal = self.user_id
+        getEmotes(False)
 
         print(f'Logged in as | {self.nick}')
         print(f'User id is | {self.user_id}')
@@ -307,7 +277,7 @@ class Bot(commands.Bot):
         message = " ".join( message.split() )
 
         ### removing cheers from translation ###
-        cheersPattern = r'^(cheer[\d]+)'
+        cheersPattern = r'(cheer[\d]+)'
         if re.search(cheersPattern,message):
             IsCheer = True
             message = re.sub(cheersPattern,'',message)
@@ -478,6 +448,10 @@ class Bot(commands.Bot):
     @commands.command(name='en')
     async def enTrans(self, ctx):
         await TransOnDemand(ctx,'en')
+
+    @commands.command(name='transEm')
+    async def updateEmoteTransList():
+        getEmotes(True)
 
     # @commands.command(name='sound')
     # async def sound(ctx):
@@ -791,6 +765,46 @@ async def TransOnDemand(ctx,target_lang):
     if msg.channel.send:
         await msg.channel.send("/me " + out_text)
         out_text = None
+
+
+###### fetching emotes from 3rd party platforms #####
+def getEmotes(resetList):
+    try:
+        if resetList:
+            SevenTv_Emotes = []
+
+        ### 7tv Channel Emotes ###
+        if config.Debug: print(f"user id: {userIdGlobal}")
+        userID = userIdGlobal
+        response = requests.get(f"https://7tv.io/v3/users/twitch/{userID}")
+        if (response.status_code == 200):
+            if 'emote_set' in response.json():
+                if config.Debug: print('Channel 7tv emotes downloaded')
+                for SevenEmote in response.json()['emote_set']['emotes']:
+                    SevenTv_Emotes.append(SevenEmote['name'])
+            else:
+                if config.Debug: print('7tv emotes not set')
+        else:
+            print("Couldnt fetch channel 7tv emotes")
+        
+        ### 7tv Global Emotes ###
+        response = requests.get(f"https://7tv.io/v3/emote-sets/global")
+        if (response.status_code == 200):
+            if 'emotes' in response.json():
+                if config.Debug: print('Global 7tv emotes downloaded')
+                for SevenEmote in response.json()['emotes']:
+                    SevenTv_Emotes.append(SevenEmote['name'])
+
+                #SevenTv_Emotes = tmpEmotes
+                # Code here will only run if the request is successful
+            else:
+                if config.Debug: print('7tv emotes not set')
+        else:
+            print("Couldnt fetch global 7tv emotes")
+
+    except Exception as e:
+        print('Error trying to fecth 7tv emotes')
+        if config.Debug: print(e.args)
 
 ### 7tv emotes checker ###
 def RemoveSevenTvEmotes(message, emotesRemoved):
